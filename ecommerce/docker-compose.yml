@@ -1,0 +1,42 @@
+version: "3"
+services:
+  db:
+    image: postgres:14.0
+    restart: always
+    environment:
+      - POSTGRES_USER=webUser
+      - POSTGRES_PASSWORD=webPassword
+    volumes:
+      - web_db_data:/var/lib/postgresql/data
+    networks:
+      - web_backend_tier
+
+  web:
+    restart: always
+    build: .
+    depends_on:
+      - db
+    command: python manage.py runserver 0.0.0.0:8009
+    environment:
+      - DJANGO_COLLECT_STATIC=on
+      - DJANGO_MANAGEPY_MIGRATE=on
+    links:
+      - db:postgres
+    volumes:
+      - .:/app
+    ports:
+      - "8009:8009"
+    expose:
+      - "8009"
+    networks:
+      - web_backend_tier
+
+volumes:
+  web_db_data:
+    driver: local
+  static_volume:
+    driver: local
+
+networks:
+  web_backend_tier:
+    driver: bridge
